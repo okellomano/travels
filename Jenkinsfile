@@ -19,6 +19,9 @@ pipeline {
         stage('Test') {
             steps {
                 echo "Testing..."
+                sh '''
+                echo "Perform code coverage, code quality and SCA tests"
+                '''
             }
         }
         stage('Deliver') {
