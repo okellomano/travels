@@ -1,3 +1,5 @@
+# Jenkins image
+
 FROM jenkins/jenkins:2.414.2-jdk17
 USER root
 RUN apt-get update && apt-get install -y lsb-release
@@ -10,3 +12,20 @@ RUN echo "deb [arch=$(dpkg --print-architecture) \
 RUN apt-get update && apt-get install -y docker-ce-cli
 USER jenkins
 RUN jenkins-plugin-cli --plugins "blueocean:1.25.3 docker-workflow:1.28"
+
+
+# Travels image
+FROM node:14
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

@@ -4,29 +4,43 @@ pipeline {
             label 'docker-agent-alpine'
         }
     }
+    environment {
+        DOCKER_HUB = credentials('docker-hub')
+        VERCEL = credentials('vercel-jenkins')
+    }
     triggers {
         pollSCM '* * * * *'
     }
     stages {
-        stage('Build') {
+        stage('Lint Code') {
             steps {
-                echo "Building..."
-                sh '''
-                echo "Build job here"
-                '''
+                sh 'npm run lint'
             }
         }
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                echo "Testing..."
-                sh '''
-                echo "Perform code coverage, code quality and SCA tests"
-                '''
+                script {
+                    docker.build('mytravels-guide:latest')
+                    docker.withRegistry('https://registry.hub.docker.com', DOCKER_HUB) {
+                        docker.image('mytravels-guide:latest').push()
+                    }
+                }
             }
         }
-        stage('Deliver') {
+        stage('Deploy to Vercel') {
             steps {
-                echo "Devliver..."
+                sh 'vercel login --token $VERCEL'
+                sh 'vercel --prod --json > deployment.json'
+            }
+        }
+        stage('Export Deployment URL') {
+            steps {
+                script {
+                    def deploymentData = readJSON file: 'deployment.json'
+                    def deploymentURL = deploymentData.url
+                    currentBuild.description = "Deployment URL: $deploymentURL"
+                    echo "Deployment URL: $deploymentURL"
+                }
             }
         }
     }
