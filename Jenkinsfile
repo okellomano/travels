@@ -1,7 +1,7 @@
 pipeline {
     agent {
         node {
-            label 'docker-agent-alpine'
+            label 'node-agent'
         }
     }
     environment {
@@ -9,7 +9,7 @@ pipeline {
         VERCEL = credentials('vercel-jenkins')
     }
     triggers {
-        pollSCM '* * * * *'
+        pollSCM '*/5 * * * *'
     }
     stages {
         stage('Lint Code') {
